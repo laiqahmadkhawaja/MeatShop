@@ -4,9 +4,11 @@
  * Meat Shop Management System
  */
 
-$page_title = 'Slaughter & Cutting Yield Breakdown';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
+
+require_login();
+require_permission('processing_manage');
 
 $branch_id = get_current_branch_id();
 $pre_animal_id = (int)($_GET['animal_id'] ?? 0);
@@ -141,6 +143,10 @@ $animals = $pdo->query("SELECT id, tag_id, animal_type, live_weight, total_anima
 
 // Fetch products for outputs
 $products = $pdo->query("SELECT id, product_name, product_code, unit_code FROM products p JOIN units u ON p.selling_unit_id = u.id WHERE p.status = 'active' ORDER BY product_name ASC")->fetchAll();
+
+$page_title = 'Slaughter & Cutting Yield Breakdown';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">

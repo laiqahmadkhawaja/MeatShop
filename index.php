@@ -417,10 +417,10 @@ for ($i = 6; $i >= 0; $i--) {
         </div>
     </main>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
-
-<!-- Chart.js Library (Dashboard only) -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<?php 
+$extra_scripts = ['https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'];
+require_once __DIR__ . '/includes/footer.php'; 
+?>
 
 <!-- Chart.js Initialization -->
 <script>

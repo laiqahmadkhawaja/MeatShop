@@ -4,9 +4,11 @@
  * Meat Shop Management System
  */
 
-$page_title = 'Record Meat Wastage & Spoilage';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
+
+require_login();
+require_permission('inventory_manage');
 
 $branch_id = get_current_branch_id();
 
@@ -70,6 +72,10 @@ $products = $pdo->prepare("SELECT p.id, p.product_name, p.product_code, COALESCE
     ORDER BY p.product_name ASC");
 $products->execute([$branch_id]);
 $prods = $products->fetchAll();
+
+$page_title = 'Record Meat Wastage & Spoilage';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">

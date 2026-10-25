@@ -4,10 +4,10 @@
  * Meat Shop Management System
  */
 
-$page_title = 'Multi-Branch Stores';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
 
+require_login();
 require_permission('settings_manage');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_branch'])) {
@@ -47,6 +47,10 @@ $branches = $pdo->query("SELECT b.*,
     LEFT JOIN branch_stock bs ON b.id = bs.branch_id
     GROUP BY b.id
     ORDER BY b.is_main DESC, b.branch_name ASC")->fetchAll();
+
+$page_title = 'Multi-Branch Stores';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">

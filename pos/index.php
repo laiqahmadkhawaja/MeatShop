@@ -4,6 +4,8 @@
  * Meat Shop Management System
  */
 
+define('IN_POS', true);
+
 $page_title = 'POS Terminal & Weight-Based Billing';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/auth.php';
@@ -53,6 +55,18 @@ $currency = get_setting('currency_symbol', 'Rs.');
             --meat-crimson: #991b1b;
             --meat-accent: #dc2626;
             --pos-header-height: 56px;
+        }
+
+        .btn-meat {
+            background-color: #dc2626 !important;
+            border-color: #dc2626 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+        }
+        .btn-meat:hover, .btn-meat:focus, .btn-meat:active {
+            background-color: #b91c1c !important;
+            border-color: #b91c1c !important;
+            color: #ffffff !important;
         }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -212,6 +226,90 @@ $currency = get_setting('currency_symbol', 'Rs.');
             transition: all 0.25s ease-in-out;
         }
 
+        /* Camera Barcode Viewfinder & Reticle Styling */
+        .scanner-viewport-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #090d16;
+            aspect-ratio: 4/3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        #barcodeScannerView {
+            width: 100% !important;
+            height: 100% !important;
+            overflow: hidden;
+        }
+
+        #barcodeScannerView video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            border-radius: 12px;
+        }
+
+        /* Custom Overlaid Aiming Reticle */
+        .scanner-reticle {
+            position: absolute;
+            width: 82%;
+            height: 64%;
+            border: 2px dashed rgba(255, 255, 255, 0.45);
+            border-radius: 12px;
+            pointer-events: none;
+            z-index: 10;
+            transition: all 0.25s ease;
+        }
+
+        .scanner-reticle.scan-matched {
+            border-color: #22c55e !important;
+            background: rgba(34, 197, 94, 0.2) !important;
+            box-shadow: 0 0 25px rgba(34, 197, 94, 0.6);
+        }
+
+        .scanner-reticle.scan-failed {
+            border-color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.25) !important;
+        }
+
+        /* Corner Reticle Brackets */
+        .reticle-corner {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-color: #dc2626;
+            border-style: solid;
+            pointer-events: none;
+        }
+        .reticle-corner.top-left { top: -2px; left: -2px; border-width: 4px 0 0 4px; border-top-left-radius: 6px; }
+        .reticle-corner.top-right { top: -2px; right: -2px; border-width: 4px 4px 0 0; border-top-right-radius: 6px; }
+        .reticle-corner.bottom-left { bottom: -2px; left: -2px; border-width: 0 0 4px 4px; border-bottom-left-radius: 6px; }
+        .reticle-corner.bottom-right { bottom: -2px; right: -2px; border-width: 0 4px 4px 0; border-bottom-right-radius: 6px; }
+
+        /* Animated Laser Scan Line */
+        .scanner-laser {
+            position: absolute;
+            left: 4%;
+            right: 4%;
+            height: 3px;
+            background: linear-gradient(90deg, rgba(220,38,38,0) 0%, #dc2626 50%, rgba(220,38,38,0) 100%);
+            box-shadow: 0 0 12px #dc2626, 0 0 24px rgba(220, 38, 38, 0.8);
+            animation: laserScan 1.8s infinite ease-in-out alternate;
+            pointer-events: none;
+        }
+
+        @keyframes laserScan {
+            0% { top: 8%; opacity: 0.9; }
+            50% { opacity: 1; }
+            100% { top: 90%; opacity: 0.9; }
+        }
+
         /* Responsive Breakpoints */
         @media (max-width: 991.98px) {
             body {
@@ -280,8 +378,12 @@ $currency = get_setting('currency_symbol', 'Rs.');
         </h5>
     </div>
 
-    <!-- Active Shift & Scale Status -->
+    <!-- Active Shift, Scale & Camera Scanner Status -->
     <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-meat rounded-pill px-3 py-1 shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#barcodeScannerModal" onclick="window.barcodeScanner && window.barcodeScanner.openModal()" title="Open Camera Barcode Scanner (F3)">
+            <i class="fa-solid fa-camera"></i> <span class="d-none d-sm-inline">Scan Barcode</span>
+        </button>
+
         <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" id="connectScaleBtn">
             <i class="fa-solid fa-scale-balanced me-1"></i> Connect Scale
         </button>
@@ -320,9 +422,12 @@ $currency = get_setting('currency_symbol', 'Rs.');
         <div class="p-3 bg-white border-bottom shadow-sm">
             <div class="row g-2 align-items-center">
                 <div class="col-12 col-md-6">
-                    <div class="input-group">
+                    <div class="input-group shadow-sm">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" id="posProductSearch" class="form-control border-start-0" placeholder="Search meat or scan barcode (F2)..." autofocus>
+                        <input type="text" id="posProductSearch" class="form-control border-start-0 border-end-0" placeholder="Search meat or barcode (F2)..." autofocus>
+                        <button class="btn btn-meat d-flex align-items-center gap-1 px-3" type="button" id="btnOpenBarcodeScanner" data-bs-toggle="modal" data-bs-target="#barcodeScannerModal" onclick="window.barcodeScanner && window.barcodeScanner.openModal()" title="Scan Barcode via Camera (F3)">
+                            <i class="fa-solid fa-camera"></i> <span class="d-none d-sm-inline fw-semibold">Scan</span>
+                        </button>
                     </div>
                 </div>
                 <!-- Scale Simulator / Live Scale Controls -->
@@ -576,6 +681,91 @@ $currency = get_setting('currency_symbol', 'Rs.');
     </div>
 </div>
 
+<!-- Modal: Camera Barcode Scanner with Auto-Zoom -->
+<div class="modal fade" id="barcodeScannerModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow-lg bg-dark text-white">
+            <div class="modal-header border-bottom border-secondary py-2 px-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle bg-danger p-2 text-white d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <i class="fa-solid fa-barcode fs-6"></i>
+                    </span>
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0">Camera Barcode Scanner</h6>
+                        <small class="text-white-50" style="font-size: 0.72rem;">Auto-Alignment & Dynamic Zoom</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-warning d-none py-1 px-2" id="btnToggleTorch" title="Flashlight / Torch">
+                        <i class="fa-solid fa-bolt"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-light d-none py-1 px-2" id="btnSwitchCamera" title="Switch Front/Back Camera">
+                        <i class="fa-solid fa-camera-rotate"></i>
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <div class="modal-body p-3 text-center">
+                <!-- Camera Viewport Box with Targeting Reticle -->
+                <div class="scanner-viewport-wrapper mb-2">
+                    <div id="barcodeScannerView"></div>
+                    
+                    <!-- Overlaid Alignment Guide Reticle -->
+                    <div class="scanner-reticle" id="scannerReticleBox">
+                        <div class="reticle-corner top-left"></div>
+                        <div class="reticle-corner top-right"></div>
+                        <div class="reticle-corner bottom-left"></div>
+                        <div class="reticle-corner bottom-right"></div>
+                        <div class="scanner-laser"></div>
+                    </div>
+
+                    <!-- Overlay Target Hint -->
+                    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-2 px-3 py-1 bg-black bg-opacity-75 rounded-pill text-white-50" style="font-size: 0.72rem; z-index: 15; pointer-events: none;">
+                        <i class="fa-solid fa-crosshairs me-1 text-danger"></i> Align meat barcode inside red brackets
+                    </div>
+                </div>
+
+                <!-- Zoom Alignment Control Bar -->
+                <div class="bg-black bg-opacity-50 p-2 rounded-3 mb-2 border border-secondary border-opacity-50">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="small text-white-50"><i class="fa-solid fa-magnifying-glass-plus me-1"></i>Zoom:</span>
+                            <strong class="text-warning fw-bold fs-6" id="scannerZoomDisplay">1.0x</strong>
+                            <small class="text-danger fw-semibold" id="scannerZoomModeBadge" style="font-size: 0.7rem;">(Auto Aligning)</small>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger rounded-pill px-2 py-0 fw-bold" id="btnToggleAutoZoom" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-arrows-to-eye me-1"></i> Auto-Zoom: ON
+                        </button>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-dark border border-secondary text-white py-0 px-2" id="btnZoomOut" title="Zoom Out">-</button>
+                        <input type="range" class="form-range flex-fill" id="scannerZoomSlider" min="1.0" max="3.0" step="0.2" value="1.0">
+                        <button type="button" class="btn btn-sm btn-dark border border-secondary text-white py-0 px-2" id="btnZoomIn" title="Zoom In">+</button>
+                    </div>
+                </div>
+
+                <!-- Live Status Feedback Message -->
+                <div id="scannerStatusMsg" class="mb-2" style="min-height: 38px;">
+                    <span class="text-white-50 small"><i class="fa-solid fa-spinner fa-spin me-1"></i> Starting camera...</span>
+                </div>
+
+                <!-- Recent Scanned Result -->
+                <div id="scannerLastScannedBadge" style="min-height: 24px;"></div>
+            </div>
+
+            <div class="modal-footer border-top border-secondary py-2 px-3 d-flex justify-content-between align-items-center bg-black bg-opacity-25">
+                <div class="form-check form-switch mb-0 text-start">
+                    <input class="form-check-input" type="checkbox" id="chkContinuousScan">
+                    <label class="form-check-label small text-white-50" for="chkContinuousScan">Continuous Scan</label>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal: Open Shift Trigger -->
 <div class="modal fade" id="openShiftModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -612,13 +802,12 @@ $currency = get_setting('currency_symbol', 'Rs.');
     </button>
 </div>
 
-<!-- Required Scripts -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<!-- Scale Integration & POS Engine JS -->
-<script src="/MeatShop/assets/js/scale.js"></script>
-<script src="/MeatShop/assets/js/pos.js"></script>
-
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php 
+$extra_scripts = [
+    '/MeatShop/assets/js/scale.js',
+    '/MeatShop/assets/js/pos.js',
+    '/MeatShop/assets/js/html5-qrcode.min.js',
+    '/MeatShop/assets/js/barcode-scanner.js'
+];
+require_once __DIR__ . '/../includes/footer.php'; 
+?>

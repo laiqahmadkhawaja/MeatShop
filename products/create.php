@@ -4,9 +4,11 @@
  * Meat Shop Management System
  */
 
-$page_title = 'Add New Meat Product';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
+
+require_login();
+require_permission('products_manage');
 
 $branch_id = get_current_branch_id();
 
@@ -77,6 +79,10 @@ $units = $pdo->query("SELECT id, unit_name, unit_code FROM units ORDER BY unit_n
 // Generate automatic next item code
 $count_prods = $pdo->query("SELECT COUNT(id) FROM products")->fetchColumn() + 1;
 $auto_code = "MP-" . str_pad($count_prods, 4, '0', STR_PAD_LEFT);
+
+$page_title = 'Add New Meat Product';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">

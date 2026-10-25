@@ -4,10 +4,10 @@
  * Meat Shop Management System
  */
 
-$page_title = 'Master Settings & Dynamic Setup';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
 
+require_login();
 require_permission('settings_manage');
 
 // Handle settings update
@@ -37,6 +37,10 @@ $units = $pdo->query("SELECT * FROM units ORDER BY id ASC")->fetchAll();
 $payment_methods = $pdo->query("SELECT * FROM payment_methods ORDER BY id ASC")->fetchAll();
 $bank_accounts = $pdo->query("SELECT * FROM bank_accounts ORDER BY id ASC")->fetchAll();
 $expense_categories = $pdo->query("SELECT * FROM expense_categories ORDER BY id ASC")->fetchAll();
+
+$page_title = 'Master Settings & Dynamic Setup';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">

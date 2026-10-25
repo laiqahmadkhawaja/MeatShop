@@ -1,0 +1,19 @@
+# Logs and temporary files
+*.log
+*.tmp
+test_cookie.txt
+
+# Environment and local configs
+.env
+.env.local
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

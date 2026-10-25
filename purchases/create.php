@@ -4,9 +4,11 @@
  * Meat Shop Management System
  */
 
-$page_title = 'New Meat Purchase Entry';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
+
+require_login();
+require_permission('purchases_manage');
 
 $branch_id = get_current_branch_id();
 
@@ -142,6 +144,10 @@ $suppliers = $pdo->query("SELECT id, supplier_name, phone, current_balance FROM 
 $products = $pdo->query("SELECT id, product_name, product_code, default_purchase_rate, unit_code FROM products p JOIN units u ON p.purchase_unit_id = u.id WHERE p.status = 'active' ORDER BY product_name ASC")->fetchAll();
 $payment_methods = $pdo->query("SELECT id, method_name FROM payment_methods WHERE is_active = 1 ORDER BY id ASC")->fetchAll();
 $bank_accounts = $pdo->query("SELECT id, bank_name, account_title, account_number FROM bank_accounts WHERE status = 'active' ORDER BY bank_name ASC")->fetchAll();
+
+$page_title = 'New Meat Purchase Entry';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">

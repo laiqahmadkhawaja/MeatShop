@@ -4,9 +4,11 @@
  * Meat Shop Management System
  */
 
-$page_title = 'Edit Meat Product';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
+
+require_login();
+require_permission('products_manage');
 
 $branch_id = get_current_branch_id();
 $product_id = (int)($_GET['id'] ?? 0);
@@ -70,6 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $categories = $pdo->query("SELECT id, category_name FROM categories WHERE status = 'active' ORDER BY category_name ASC")->fetchAll();
 $cut_types = $pdo->query("SELECT id, cut_name FROM cut_types ORDER BY cut_name ASC")->fetchAll();
 $units = $pdo->query("SELECT id, unit_name, unit_code FROM units ORDER BY unit_name ASC")->fetchAll();
+
+$page_title = 'Edit Meat Product';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">

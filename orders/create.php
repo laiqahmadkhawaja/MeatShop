@@ -4,9 +4,11 @@
  * Meat Shop Management System
  */
 
-$page_title = 'Create Advance Meat Booking';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
+
+require_login();
+require_permission('orders_manage');
 
 $branch_id = get_current_branch_id();
 
@@ -96,6 +98,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Customers & Products
 $customers = $pdo->query("SELECT id, customer_name, phone, customer_type FROM customers WHERE status = 'active' ORDER BY customer_name ASC")->fetchAll();
 $products = $pdo->query("SELECT id, product_name, product_code, wholesale_selling_rate, retail_selling_rate, unit_code FROM products p JOIN units u ON p.selling_unit_id = u.id WHERE p.status = 'active' ORDER BY product_name ASC")->fetchAll();
+
+$page_title = 'Create Advance Meat Booking';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">

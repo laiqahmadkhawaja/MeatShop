@@ -3,6 +3,12 @@
  * Global Footer & Realtime Modals Component
  */
 ?>
+<?php 
+$footer_current_page = basename($_SERVER['PHP_SELF'] ?? '');
+$footer_current_dir = basename(dirname($_SERVER['PHP_SELF'] ?? ''));
+$is_pos_page = defined('IN_POS') || $footer_current_dir === 'pos' || strpos($_SERVER['REQUEST_URI'] ?? '', '/pos/') !== false;
+if (!$is_pos_page): 
+?>
         <footer class="mt-auto py-3 bg-white border-top text-center text-muted fs-sm">
             <div class="container-fluid d-flex flex-column flex-sm-row justify-content-between align-items-center">
                 <span>&copy; <?= date('Y') ?> <strong><?= htmlspecialchars(get_setting('shop_name', 'Meat Shop System')) ?></strong>. All rights reserved.</span>
@@ -10,12 +16,9 @@
             </div>
         </footer>
     </div> <!-- /#content-wrapper -->
+<?php endif; ?>
 
-    <?php 
-    $footer_current_page = basename($_SERVER['PHP_SELF']);
-    $footer_current_dir = basename(dirname($_SERVER['PHP_SELF']));
-    if ($footer_current_dir !== 'pos'): 
-    ?>
+    <?php if (!$is_pos_page): ?>
     <!-- Mobile Bottom Quick Navigation Bar -->
     <nav class="mobile-bottom-nav d-lg-none position-fixed bottom-0 start-0 end-0 bg-white border-top shadow-lg d-flex justify-content-around py-2" style="z-index: 1030;">
         <a href="/MeatShop/index.php" class="text-center text-decoration-none <?= ($footer_current_page == 'index.php' && $footer_current_dir == 'MeatShop') ? 'text-danger fw-bold' : 'text-muted' ?>">
@@ -435,5 +438,11 @@
             </div>
         </div>
     </div>
+
+    <?php if (isset($extra_scripts) && is_array($extra_scripts)): ?>
+        <?php foreach ($extra_scripts as $script): ?>
+            <script src="<?= htmlspecialchars($script) ?>"></script>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </body>
 </html>

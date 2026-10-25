@@ -4,9 +4,11 @@
  * Meat Shop Management System
  */
 
-$page_title = 'Purchase Live Animal';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
+
+require_login();
+require_permission('animals_manage');
 
 $branch_id = get_current_branch_id();
 
@@ -60,6 +62,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $suppliers = $pdo->query("SELECT id, supplier_name, phone FROM suppliers WHERE status = 'active' ORDER BY supplier_name ASC")->fetchAll();
 $auto_tag = "TAG-" . date('ym') . "-" . rand(1000, 9999);
+
+$page_title = 'Purchase Live Animal';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">

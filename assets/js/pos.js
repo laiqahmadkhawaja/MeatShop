@@ -130,6 +130,12 @@ $(document).ready(function() {
             e.preventDefault();
             $('#posProductSearch').focus();
         }
+        if (e.key === 'F3') {
+            e.preventDefault();
+            if (window.barcodeScanner) {
+                window.barcodeScanner.openModal();
+            }
+        }
         if (e.key === 'F4') {
             e.preventDefault();
             $('#btnCompleteSale').click();
@@ -238,6 +244,8 @@ function addProductToCart(element) {
 
     renderCart();
 }
+
+window.addProductToCart = addProductToCart;
 
 // Render Cart HTML
 function renderCart() {

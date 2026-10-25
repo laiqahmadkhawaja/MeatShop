@@ -4,10 +4,10 @@
  * Meat Shop Management System
  */
 
-$page_title = 'User Accounts & Roles';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
 
+require_login();
 require_permission('users_manage');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
@@ -45,6 +45,10 @@ $users = $pdo->query("SELECT u.*, r.display_name as role_title, b.branch_name
 
 $roles = $pdo->query("SELECT id, display_name FROM roles ORDER BY id ASC")->fetchAll();
 $branches = $pdo->query("SELECT id, branch_name FROM branches WHERE status = 'active' ORDER BY branch_name ASC")->fetchAll();
+
+$page_title = 'User Accounts & Roles';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">

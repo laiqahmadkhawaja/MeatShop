@@ -4,9 +4,11 @@
  * Meat Shop Management System
  */
 
-$page_title = 'Record Operational Expense';
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../includes/sidebar.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/functions.php';
+
+require_login();
+require_permission('expenses_manage');
 
 $branch_id = get_current_branch_id();
 
@@ -68,6 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $categories = $pdo->query("SELECT id, category_name FROM expense_categories ORDER BY category_name ASC")->fetchAll();
 $payment_methods = $pdo->query("SELECT id, method_name FROM payment_methods WHERE is_active = 1 ORDER BY id ASC")->fetchAll();
 $bank_accounts = $pdo->query("SELECT id, bank_name, account_title, current_balance FROM bank_accounts WHERE status = 'active' ORDER BY bank_name ASC")->fetchAll();
+
+$page_title = 'Record Operational Expense';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <div id="content-wrapper">
