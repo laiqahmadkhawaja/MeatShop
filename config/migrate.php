@@ -676,6 +676,7 @@ function seed_default_data($pdo) {
         'tax_enabled' => '0',
         'default_tax_rate' => '0',
         'default_tare_weight' => '0.050', // 50 grams tray tare default
+        'receipt_width' => '80mm', // 80mm (72mm print) or 58mm (48mm print)
         'receipt_footer_text' => 'Thank you for choosing Al-Barakah Meat Shop! We guarantee 100% fresh, hygienic & halal meat.',
         'barcode_type' => 'CODE128',
         'low_stock_threshold' => '10.000',

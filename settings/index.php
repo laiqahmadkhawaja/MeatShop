@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_shop_settings'
     $keys = [
         'shop_name', 'tagline', 'phone', 'email', 'address', 'currency_symbol',
         'currency_code', 'decimal_precision', 'weight_precision', 'default_tare_weight',
-        'receipt_footer_text', 'low_stock_threshold'
+        'receipt_footer_text', 'low_stock_threshold', 'receipt_width'
     ];
 
     foreach ($keys as $k) {
@@ -154,6 +154,13 @@ require_once __DIR__ . '/../includes/sidebar.php';
                         <div class="col-6 col-md-3">
                             <label class="form-label small fw-bold">Default Tray Tare Weight (KG)</label>
                             <input type="number" step="0.001" name="default_tare_weight" class="form-control fw-bold text-primary" value="<?= htmlspecialchars(get_setting('default_tare_weight', '0.050')) ?>">
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-bold">Default Thermal Roll Width</label>
+                            <select name="receipt_width" class="form-select fw-bold">
+                                <option value="80mm" <?= get_setting('receipt_width', '80mm') === '80mm' ? 'selected' : '' ?>>80mm Roll (72mm Printable)</option>
+                                <option value="58mm" <?= get_setting('receipt_width') === '58mm' ? 'selected' : '' ?>>58mm Roll (48mm Printable)</option>
+                            </select>
                         </div>
 
                         <div class="col-12">
