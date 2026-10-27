@@ -1,6 +1,7 @@
 # Logs and temporary files
 *.log
 *.tmp
+*cookie*.txt
 test_cookie.txt
 
 # Environment and local configs

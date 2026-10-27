@@ -96,8 +96,32 @@ if ($action === 'create_sale') {
         }
         $grand_total = max(0.00, $subtotal - $discount_amount);
 
-        // Payment status
+        // Payment status & balance
         $balance_amount = max(0.00, $grand_total - $amount_paid);
+
+        // Fetch customer details to validate credit policy
+        $cust_stmt = $pdo->prepare("SELECT id, customer_name, customer_type, credit_limit, current_balance FROM customers WHERE id = ?");
+        $cust_stmt->execute([$customer_id]);
+        $customer = $cust_stmt->fetch();
+        if (!$customer) {
+            json_response(['status' => 'error', 'message' => 'Invalid customer selected.'], 422);
+        }
+
+        // Fetch payment method type
+        $pm_stmt_type = $pdo->prepare("SELECT method_type FROM payment_methods WHERE id = ?");
+        $pm_stmt_type->execute([$payment_method_id]);
+        $pm_method_type = $pm_stmt_type->fetchColumn();
+
+        // Enforce rule: Walk-in customers cannot buy on credit or leave an unpaid balance
+        if ($customer['customer_type'] === 'walk_in') {
+            if ($balance_amount > 0.01 || $pm_method_type === 'credit') {
+                json_response([
+                    'status' => 'error',
+                    'message' => 'Walk-in customers cannot save sales as credit. Full payment of Rs. ' . number_format($grand_total, 2) . ' is required. Please collect full payment or select/register a customer account for credit (Khata) sales.'
+                ], 422);
+            }
+        }
+
         $payment_status = 'paid';
         if ($balance_amount > 0 && $amount_paid > 0) {
             $payment_status = 'partial';

@@ -50,9 +50,49 @@ $(document).ready(function() {
     // Auto-update amount paid when payment method or grand total changes
     $('#cartPaymentMethod').on('change', function() {
         const type = $(this).find('option:selected').data('type');
-        if (type !== 'credit') {
-            $('#cartAmountPaid').val($('#lblGrandTotal').text().replace(/[^0-9.]/g, ''));
+        const custType = $('#cartCustomerId option:selected').data('type') || 'walk_in';
+        const grandTotal = parseFloat($('#lblGrandTotal').text().replace(/[^0-9.]/g, '')) || 0;
+
+        if (type === 'credit' && custType === 'walk_in') {
+            Swal.fire({
+                title: 'Credit Not Allowed',
+                text: 'Walk-in customers cannot make purchases on Credit/Khata. Please select or add a registered customer account.',
+                icon: 'warning'
+            });
+            // Revert to first cash or non-credit payment method
+            const nonCreditVal = $('#cartPaymentMethod option:not([data-type="credit"]):first').val();
+            $('#cartPaymentMethod').val(nonCreditVal);
+            $('#cartAmountPaid').val(grandTotal.toFixed(2));
+            return;
         }
+
+        if (type !== 'credit') {
+            $('#cartAmountPaid').val(grandTotal.toFixed(2));
+        } else {
+            $('#cartAmountPaid').val('0.00');
+        }
+        validateWalkinCredit();
+    });
+
+    // Customer selection change listener
+    $('#cartCustomerId').on('change', function() {
+        const custType = $(this).find('option:selected').data('type') || 'walk_in';
+        const pmType = $('#cartPaymentMethod option:selected').data('type');
+        const grandTotal = parseFloat($('#lblGrandTotal').text().replace(/[^0-9.]/g, '')) || 0;
+
+        if (custType === 'walk_in') {
+            if (pmType === 'credit') {
+                const nonCreditVal = $('#cartPaymentMethod option:not([data-type="credit"]):first').val();
+                $('#cartPaymentMethod').val(nonCreditVal);
+            }
+            $('#cartAmountPaid').val(grandTotal.toFixed(2));
+        }
+        validateWalkinCredit();
+    });
+
+    // Live validation on Amount Paid input
+    $('#cartAmountPaid').on('input', function() {
+        validateWalkinCredit();
     });
 
     // Clear Cart
@@ -371,6 +411,29 @@ function calculateTotals() {
     if ($('#cartPaymentMethod option:selected').data('type') !== 'credit') {
         $('#cartAmountPaid').val(grandTotal.toFixed(2));
     }
+    validateWalkinCredit();
+}
+
+// Live Validation for Walk-in Customer Credit Prevention
+function validateWalkinCredit() {
+    const custType = $('#cartCustomerId option:selected').data('type') || 'walk_in';
+    const pmType = $('#cartPaymentMethod option:selected').data('type');
+    const grandTotal = parseFloat($('#lblGrandTotal').text().replace(/[^0-9.]/g, '')) || 0;
+    const paid = parseFloat($('#cartAmountPaid').val()) || 0;
+
+    const isCreditSale = (pmType === 'credit') || (paid < (grandTotal - 0.01));
+
+    if (custType === 'walk_in' && isCreditSale && grandTotal > 0) {
+        $('#cartAmountPaid').addClass('is-invalid');
+        if (!$('#walkinCreditWarning').length) {
+            $('#cartAmountPaid').after('<div id="walkinCreditWarning" class="text-danger small mt-1 fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i>Walk-in customers cannot have credit sales. Full payment required.</div>');
+        }
+        $('#btnCompleteSale').addClass('btn-secondary').removeClass('btn-meat');
+    } else {
+        $('#cartAmountPaid').removeClass('is-invalid');
+        $('#walkinCreditWarning').remove();
+        $('#btnCompleteSale').addClass('btn-meat').removeClass('btn-secondary');
+    }
 }
 
 // Mobile Tab Switchers
@@ -402,10 +465,36 @@ function submitCheckout() {
     }
 
     const customerId = $('#cartCustomerId').val();
+    const customerType = $('#cartCustomerId option:selected').data('type') || 'walk_in';
     const discountVal = parseFloat($('#cartDiscount').val()) || 0;
     const discountType = $('#cartDiscountType').val();
     const paymentMethodId = $('#cartPaymentMethod').val();
+    const pmType = $('#cartPaymentMethod option:selected').data('type');
     const amountPaid = parseFloat($('#cartAmountPaid').val()) || 0;
+    const grandTotal = parseFloat($('#lblGrandTotal').text().replace(/[^0-9.]/g, '')) || 0;
+
+    // Strict validation: Walk-in customers cannot have credit sales or unpaid balance
+    if (customerType === 'walk_in') {
+        if (pmType === 'credit') {
+            Swal.fire({
+                title: 'Credit Not Allowed',
+                text: 'Walk-in customers cannot make purchases using Credit/Khata. Please select or register a customer account, or change payment method to Cash/Bank/Wallet.',
+                icon: 'warning'
+            });
+            return;
+        }
+
+        if (amountPaid < (grandTotal - 0.01)) {
+            const unpaid = (grandTotal - amountPaid).toFixed(2);
+            Swal.fire({
+                title: 'Full Payment Required',
+                text: `Walk-in customers cannot have credit or partial unpaid balance (Rs. ${unpaid} remaining). Full payment of Rs. ${grandTotal.toFixed(2)} is required, or please select/register a customer account for credit (Khata) sales.`,
+                icon: 'warning'
+            });
+            $('#cartAmountPaid').focus();
+            return;
+        }
+    }
 
     const payload = {
         customer_id: customerId,
@@ -448,12 +537,16 @@ function submitCheckout() {
                     showConfirmButton: false
                 });
             } else {
-                Swal.fire('Error', res.message || 'Failed to complete sale', 'error');
+                Swal.fire('Validation Error', res.message || 'Failed to complete sale', 'error');
             }
         },
-        error: function(err) {
+        error: function(xhr) {
             $('#btnCompleteSale').prop('disabled', false).html('<span><i class="fa-solid fa-check-circle me-1"></i> COMPLETE SALE (F4)</span><i class="fa-solid fa-arrow-right"></i>');
-            Swal.fire('Server Error', 'Failed to communicate with POS server', 'error');
+            let errMsg = 'Failed to communicate with POS server';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errMsg = xhr.responseJSON.message;
+            }
+            Swal.fire('Credit Policy Warning', errMsg, 'warning');
         }
     });
 }

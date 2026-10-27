@@ -61,6 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $grand_total = $subtotal + $delivery_charges;
             $balance = max(0.00, $grand_total - $advance_paid);
 
+            // Walk-in customer cannot have credit or pending balance
+            $cust_type_stmt = $pdo->prepare("SELECT customer_type FROM customers WHERE id = ?");
+            $cust_type_stmt->execute([$customer_id]);
+            $ctype = $cust_type_stmt->fetchColumn();
+            if ($ctype === 'walk_in' && $balance > 0.01) {
+                throw new Exception("Walk-in customers cannot place orders on credit or with pending balance (Rs. " . number_format($balance, 2) . "). Full advance payment is required, or please select a registered customer.");
+            }
+
             $stmt = $pdo->prepare("INSERT INTO orders (order_no, branch_id, customer_id, order_type, order_date, delivery_datetime, delivery_address, rider_name, delivery_charges, subtotal, grand_total, advance_paid, balance_amount, status, notes, created_by)
                 VALUES (?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)");
             $stmt->execute([
